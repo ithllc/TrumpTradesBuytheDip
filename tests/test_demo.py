@@ -5,7 +5,7 @@ import pytest
 
 from app.core import SOURCE, dip_percent, load_rows, plain_summary, validate_row
 from app.main import app
-from app.providers import bounded_context
+from app.providers import bounded_context, kb_result_context
 from scripts.replay_proofs import normalized_facts
 
 
@@ -45,6 +45,13 @@ def test_regression_replay_exposes_and_fixes_owner_date_bug():
 def test_model_cannot_add_unapproved_trade_claims():
     assert "historical information" in bounded_context("TIMING")
     assert bounded_context("Buy this stock now") is None
+
+
+def test_empty_or_wrong_kb_results_do_not_count_as_retrieval():
+    assert kb_result_context({"results": []}, "A2")[0] is None
+    assert kb_result_context({"results": [{"content": "Row A1"}]}, "A2")[0] is None
+    context, status = kb_result_context({"results": [{"content": "Row A2"}]}, "A2")
+    assert context and "found" in status
 
 
 @pytest.mark.asyncio

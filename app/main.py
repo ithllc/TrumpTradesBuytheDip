@@ -59,12 +59,12 @@ async def explain(row_id: str, request: ExplainRequest) -> dict:
     row = find_row(row_id)
     if row is None:
         raise HTTPException(404, "Sample row not found")
-    retrieval, kb_status = await kb_search(f"SAMPLE-2026-01 row {row_id} {row['asset']} owner and transaction")
+    retrieval, kb_status = await kb_search(f"SAMPLE-2026-01 row {row_id} {row['asset']} owner and transaction", row_id)
     model_text, latency_ms, model_status = await nicrron_explain(row, retrieval)
     context = bounded_context(model_text)
     factual = plain_summary(row)
     output = factual + (f" AI context: {context}" if context else "")
-    prism_status = await record_prism(row, output, retrieval, latency_ms, request.session_id, bool(model_text))
+    prism_status = await record_prism(row, output, retrieval, latency_ms, request.session_id, model_text)
     return {"sample_only": True, "summary": factual, "ai_context": context,
             "source_row": row_id, "kb_status": kb_status, "model_status": model_status,
             "prism_status": prism_status, "used_fallback": context is None}

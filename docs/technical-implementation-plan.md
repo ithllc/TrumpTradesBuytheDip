@@ -1,6 +1,6 @@
 # Technical implementation plan — 90-minute solo build
 
-**Status:** plan, not proof of completion. **Target:** a live, sample-only Money Intelligence demo and three hosted PRISM proofs.
+**Status (2026-10-17):** local app, live Nicrron call, PRISM trace, and PRISM KB retrieval verified. The fictional filing is uploaded and assigned to `trumptrades-sample-explainer`; a live app trace contains both KB and model spans. Six KB-backed synthetic v1 cases and the same six corrected v2 cases were sent. The PRISM account reports Free with Evaluators Hub read-only, and a custom evaluator creation request returned HTTP 402 (`plan_upgrade_required`). PRISM's trace analysis returned an upstream Anthropic 401 authentication error; its Root Cause run therefore saw zero failing traces and created zero clusters. Neither the cluster nor evaluator proof is complete. **Target:** a live, sample-only Money Intelligence demo and three hosted PRISM proofs.
 
 ## Keys and APIs
 
@@ -27,7 +27,7 @@ Create `.env` from `.env.example` within this repository. The local workspace's 
 | 75–85 | In Evaluators Hub create “Every transaction claim and number must be supported by retrieved sample filing context; distinguish filer from reported owner and trade date from filing date.” Score v1 and v2 on the same inputs. | Two evaluator result views with input set and scores. |
 | 85–90 | Rehearse two-minute demo, capture proof media, fill Devpost links. | Live URL, prototype URL, repo URL, three proof screenshots/video. |
 
-If Builder access is unavailable, request the event entitlement immediately. A local substitute cannot honestly satisfy the required hosted evaluator proof. Keep building the rest of the app while access is resolved.
+Ask the event organizer or PRISM support for Evaluators Hub write access on this project and repair of the trace-analysis provider authentication error. A local substitute cannot satisfy the required hosted evaluator or Root Cause proofs. Once resolved, rerun trace analysis/Root Cause and the evaluator against the already recorded v1/v2 cases.
 
 ## Implementation tasks
 
@@ -38,7 +38,9 @@ If Builder access is unavailable, request the event entitlement immediately. A l
 5. Implement PRISM KB search and trace submission per [official docs](https://blockconvey.com/docs). Include `project_id`, `model`, `input_messages`, `output_message`, `latency_ms`, `session_id`, and `agent_id`; attach retrieval/tool context via the supported SDK or span path so `{context}` is populated for the evaluator. Verify the run appears in the PRISM dashboard.
 6. Capture repeatable v1/v2 fixture questions and their expected answers. Use the same dataset for both; preserve trace/run IDs and screenshots. Do not claim a root-cause cluster if PRISM has not produced one.
 
-The repository includes `scripts/replay_proofs.py` for six explicitly synthetic failure/fix cases. It calls Nicrron for each case, queries PRISM KB, and sends traces plus retrieval and normalization spans. Run `python -m scripts.replay_proofs --version v1` before Root Cause, then `python -m scripts.replay_proofs --version v2` after inspecting the failing examples. The v1 bug is deliberately reproduced and disclosed in source and trace metadata. Check the actual PRISM evaluator scores; do not state a score improvement until the dashboard confirms it.
+The repository includes `scripts/replay_proofs.py` for six explicitly synthetic failure/fix cases. It calls Nicrron for each case, queries PRISM KB, and sends traces plus retrieval and normalization spans. Run `python3 -m scripts.replay_proofs --version v1` before Root Cause, then `python3 -m scripts.replay_proofs --version v2` after inspecting the failing examples. The v1 bug is deliberately reproduced and disclosed in source and trace metadata. PRISM currently counts zero failing traces from the v1 replay, so investigate trace failure classification before claiming a Root Cause cluster. Check the actual PRISM evaluator scores; do not state a score improvement until the dashboard confirms it.
+
+For a different PRISM project without an uploaded filing, `--source local` can prepare transparent local-evidence traces. It does not meet the required KB proof; upload and assign the sample filing, then replay in `kb` mode.
 
 ## Checks before demo
 
@@ -51,4 +53,4 @@ The repository includes `scripts/replay_proofs.py` for six explicitly synthetic 
 
 ## Demo script
 
-“This is fictional sample data. Here is what the filing says, who the asset belongs to, and how long after the trade the filing became public. The evidence panel shows the exact source row. The price card calculates a watch event, not a buy command. Here is the Nicrron explanation grounded in that row. In PRISM, the KB retrieval is visible. Our first version confused ownership/date in several sample cases; Root Cause grouped that failure, and this evaluator scores the same questions before and after the fix.”
+“This is fictional sample data. Here is what the filing says, who the asset belongs to, and how long after the trade the filing became public. The evidence panel shows the exact source row. The price card calculates a watch event, not a buy command. Here is the Nicrron explanation grounded in that row. In PRISM, the KB retrieval and model call are visible.” Add the Root Cause and evaluator results only after PRISM actually produces them.

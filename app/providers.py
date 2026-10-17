@@ -3,15 +3,16 @@
 from __future__ import annotations
 
 import asyncio
+import json
 import os
 import time
-from datetime import datetime, timezone
+from datetime import datetime, timedelta, timezone
 from uuid import uuid4
 
 import httpx
 
 AGENT_ID = "trumptrades-sample-explainer"
-MODEL = "nicrron/auto"
+MODEL = "openai/gpt-4o-mini"
 _model_call_lock = asyncio.Lock()
 _model_calls = 0
 CONTEXT = {
@@ -26,7 +27,17 @@ def prism_configured() -> bool:
     return bool(os.getenv("PRISMTRACE_PROJECT_ID") and os.getenv("PRISMTRACE_API_KEY"))
 
 
-async def kb_search(query: str) -> tuple[str | None, str]:
+def kb_result_context(data: dict, expected_row_id: str) -> tuple[str | None, str]:
+    results = data.get("results", [])
+    if not isinstance(results, list) or not results:
+        return None, "PRISM KB has no matching document; upload and assign the sample filing"
+    context = json.dumps(results, ensure_ascii=False)
+    if f"Row {expected_row_id}" not in context:
+        return None, "PRISM KB returned no matching source row; check document assignment"
+    return context[:6000], "PRISM KB found the sample filing row"
+
+
+async def kb_search(query: str, expected_row_id: str) -> tuple[str | None, str]:
     if not prism_configured():
         return None, "PRISM credentials not configured"
     payload = {"project_id": os.environ["PRISMTRACE_PROJECT_ID"], "agent_id": AGENT_ID, "query": query, "limit": 3}
@@ -35,8 +46,8 @@ async def kb_search(query: str) -> tuple[str | None, str]:
             response = await client.post("https://api.prism.blockconvey.com/api/knowledge-base/search", json=payload,
                                          headers={"X-PRISMtrace-Key": os.environ["PRISMTRACE_API_KEY"]})
             response.raise_for_status()
-            return response.text[:6000], "PRISM KB search completed"
-    except httpx.HTTPError:
+            return kb_result_context(response.json(), expected_row_id)
+    except (httpx.HTTPError, ValueError, AttributeError):
         return None, "PRISM KB unavailable; check document assignment and key"
 
 
@@ -61,9 +72,12 @@ async def nicrron_explain(row: dict, retrieval: str | None) -> tuple[str | None,
         async with httpx.AsyncClient(timeout=25) as client:
             response = await client.post("https://api.nicrron.ai/v1/chat/completions",
                                          headers={"Authorization": f"Bearer {key}"},
-                                         json={"model": MODEL, "messages": messages, "max_tokens": 90, "temperature": 0})
+                                         json={"model": MODEL, "messages": messages, "max_tokens": 180, "temperature": 0})
             response.raise_for_status()
-            answer = response.json()["choices"][0]["message"]["content"].strip()
+            content = response.json()["choices"][0]["message"].get("content")
+            answer = content.strip() if isinstance(content, str) else ""
+            if not answer:
+                return None, int((time.monotonic() - started) * 1000), "Nicrron returned no text; using verified sample summary"
             return answer, int((time.monotonic() - started) * 1000), "Nicrron call completed"
     except (httpx.HTTPError, KeyError, IndexError, TypeError, ValueError):
         return None, int((time.monotonic() - started) * 1000), "Nicrron unavailable; using verified sample summary"
@@ -73,7 +87,7 @@ def bounded_context(text: str | None) -> str | None:
     return CONTEXT.get(text.strip().upper()) if text else None
 
 
-async def record_prism(row: dict, output: str, retrieval: str | None, latency_ms: int, session_id: str, model_called: bool) -> str:
+async def record_prism(row: dict, output: str, retrieval: str | None, latency_ms: int, session_id: str, model_text: str | None) -> str:
     if not prism_configured():
         return "PRISM credentials not configured"
     trace_id = f"sample-{uuid4()}"
@@ -81,7 +95,7 @@ async def record_prism(row: dict, output: str, retrieval: str | None, latency_ms
     headers = {"X-PRISMtrace-Key": os.environ["PRISMTRACE_API_KEY"]}
     payload = {
         "project_id": os.environ["PRISMTRACE_PROJECT_ID"], "trace_id": trace_id,
-        "model": MODEL if model_called else "deterministic-fallback",
+        "model": MODEL if model_text else "deterministic-fallback",
         "input_messages": [{"role": "user", "content": f"Explain fictional sample row {row['id']}: {row['raw_excerpt']}"}],
         "output_message": output, "latency_ms": latency_ms, "session_id": session_id,
         "agent_id": AGENT_ID, "agent_name": "Sample disclosure explainer",
@@ -91,12 +105,21 @@ async def record_prism(row: dict, output: str, retrieval: str | None, latency_ms
         async with httpx.AsyncClient(timeout=12) as client:
             response = await client.post(f"{host}/api/traces", json=payload, headers=headers)
             response.raise_for_status()
+            spans = []
+            now = datetime.now(timezone.utc)
             if retrieval:
-                now = datetime.now(timezone.utc).isoformat()
+                spans.append({"name": "kb_search", "span_type": "retrieval", "start_time": now.isoformat(),
+                              "end_time": now.isoformat(), "input_text": f"sample row {row['id']}",
+                              "output_text": retrieval[:6000], "status": "ok"})
+            if model_text:
+                spans.append({"name": "nicrron_caveat_selection", "span_type": "llm",
+                              "start_time": (now - timedelta(milliseconds=latency_ms)).isoformat(),
+                              "end_time": now.isoformat(), "duration_ms": latency_ms,
+                              "input_text": row["raw_excerpt"] + ("\n" + retrieval[:3000] if retrieval else ""),
+                              "output_text": model_text, "model": MODEL, "status": "ok"})
+            if spans:
                 span = {"trace_id": trace_id, "project_id": os.environ["PRISMTRACE_PROJECT_ID"], "session_id": session_id,
-                        "spans": [{"name": "kb_search", "span_type": "retrieval", "start_time": now,
-                                   "end_time": now, "input_text": f"sample row {row['id']}",
-                                   "output_text": retrieval[:6000], "status": "ok"}]}
+                        "spans": spans}
                 span_response = await client.post(f"{host}/api/spans/ingest", json=span, headers=headers)
                 span_response.raise_for_status()
             return f"PRISM trace received: {trace_id}"

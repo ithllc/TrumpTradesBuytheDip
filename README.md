@@ -16,6 +16,8 @@ For the PRISM KB proof, upload [`sample_data/sample_filing.md`](sample_data/samp
 
 For a repeatable failure/fix demonstration, run `python -m scripts.replay_proofs --version v1`, inspect the six synthetic failures in PRISM, then run `python -m scripts.replay_proofs --version v2`. The v1 replay intentionally reproduces an owner/date normalization bug and is labeled as such in code and trace metadata. It makes six Nicrron calls per version, so run it only when the sample document is assigned and the account is ready. Trigger Root Cause and the custom evaluator in the PRISM dashboard as described in the plan.
 
+If PRISM KB is still empty, `--source local` uses the committed fictional filing row to prepare Root Cause traces. Those traces are labeled `source_mode=local` and **do not** satisfy the KB proof. Rerun the KB path after upload.
+
 The repository also has a small Dockerfile for a public demo host. The web explanation route has a 30-call in-process Nicrron cap per server process; the replay script has its own 12-call cost. Use a provider account budget and disable automatic wallet refill if you do not want it. `GET /healthz` returns a sample-only readiness response.
 
 ## Public demo deployment
