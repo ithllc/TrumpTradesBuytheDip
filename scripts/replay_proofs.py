@@ -46,8 +46,8 @@ async def one_case(client: httpx.AsyncClient, version: str, row_id: str, questio
     facts = normalized_facts(row, version)
     started = time.monotonic()
     messages = [
-        {"role": "system", "content": "This is fictional sample data. Explain the supplied normalized facts in one short sentence. Do not add a recommendation."},
-        {"role": "user", "content": f"Question: {question}\nNormalized facts: {facts}"},
+        {"role": "system", "content": "This is fictional sample data. Choose the most useful caveat: OWNER, TIMING, AMOUNT, or PRICE. Return exactly one word."},
+        {"role": "user", "content": f"Question: {question}\nNormalized facts: {facts}\nRetrieved filing: {retrieval[:3000]}"},
     ]
     model_response = await client.post("https://api.nicrron.ai/v1/chat/completions",
                                        headers={"Authorization": f"Bearer {os.environ['NICRRON_API_KEY']}"},
