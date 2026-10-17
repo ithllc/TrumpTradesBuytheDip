@@ -20,6 +20,7 @@ CONTEXT = {
     "TIMING": "A disclosure can appear weeks after a transaction, so it is historical information.",
     "AMOUNT": "A disclosed amount is a range, not the exact amount spent or received.",
     "PRICE": "A price dip is a change from a reference; it does not predict a rebound.",
+    "SOURCE": "Open the evidence panel to read the exact fictional filing row behind this card.",
 }
 
 
@@ -51,7 +52,7 @@ async def kb_search(query: str, expected_row_id: str) -> tuple[str | None, str]:
         return None, "PRISM KB unavailable; check document assignment and key"
 
 
-async def nicrron_explain(row: dict, retrieval: str | None) -> tuple[str | None, int, str]:
+async def nicrron_explain(row: dict, retrieval: str | None, question: str = "") -> tuple[str | None, int, str]:
     global _model_calls
     key = os.getenv("NICRRON_API_KEY")
     if not key:
@@ -62,10 +63,10 @@ async def nicrron_explain(row: dict, retrieval: str | None) -> tuple[str | None,
         _model_calls += 1
     source = retrieval or row["raw_excerpt"]
     messages = [
-        {"role": "system", "content": ("This is fictional sample data. Choose the one most useful beginner caveat "
-                                        "from OWNER, TIMING, AMOUNT, or PRICE. Return exactly one of those words and nothing else. "
+        {"role": "system", "content": ("This is fictional sample data. Select the topic that best answers the user's question: "
+                                        "OWNER, TIMING, AMOUNT, PRICE, or SOURCE. Return exactly one of those words and nothing else. "
                                         "Use the supplied sample row and retrieval only. No investment recommendation.")},
-        {"role": "user", "content": f"Sample row: {row['raw_excerpt']}\nRetrieved context: {source}\nWhich caveat matters most?"},
+        {"role": "user", "content": f"Sample row: {row['raw_excerpt']}\nRetrieved context: {source}\nUser question: {question or 'What should a beginner know about this filing?'}"},
     ]
     started = time.monotonic()
     try:
@@ -87,7 +88,21 @@ def bounded_context(text: str | None) -> str | None:
     return CONTEXT.get(text.strip().upper()) if text else None
 
 
-async def record_prism(row: dict, output: str, retrieval: str | None, latency_ms: int, session_id: str, model_text: str | None) -> str:
+def answer_for_topic(row: dict, topic: str | None) -> str | None:
+    if not topic:
+        return None
+    owner = {"official": "the filer", "spouse": "the filer's spouse", "dependent": "the filer's dependent", "unknown": "not specified"}[row["reported_for"]]
+    answers = {
+        "OWNER": f"The disclosed owner is {owner}. The filing names {row['filer']} as the filer; that does not prove who placed the order.",
+        "TIMING": f"The reported transaction date is {row['transaction_date']}. The filing date is {row['filed_date']}, and it first became public on {row['first_public_at']}.",
+        "AMOUNT": f"The filing gives a range of ${row['amount_min']:,} to ${row['amount_max']:,}, not an exact trade value or execution price.",
+        "PRICE": f"The fictional observed price is ${row['observed_price']} versus a ${row['reference_price']} reference over {row['reference_window']}. That is a {row['dip_pct']}% change, not a forecast or recommendation.",
+        "SOURCE": f"This fictional example comes from sample report {row['source_id']}, row {row['source_row']}. Open the evidence panel to read the exact excerpt.",
+    }
+    return answers.get(topic.strip().upper())
+
+
+async def record_prism(row: dict, output: str, retrieval: str | None, latency_ms: int, session_id: str, model_text: str | None, question: str = "") -> str:
     if not prism_configured():
         return "PRISM credentials not configured"
     trace_id = f"sample-{uuid4()}"
@@ -96,7 +111,7 @@ async def record_prism(row: dict, output: str, retrieval: str | None, latency_ms
     payload = {
         "project_id": os.environ["PRISMTRACE_PROJECT_ID"], "trace_id": trace_id,
         "model": MODEL if model_text else "deterministic-fallback",
-        "input_messages": [{"role": "user", "content": f"Explain fictional sample row {row['id']}: {row['raw_excerpt']}"}],
+        "input_messages": [{"role": "user", "content": f"Sample row {row['id']}: {question.strip() or 'Explain this filing simply'}"}],
         "output_message": output, "latency_ms": latency_ms, "session_id": session_id,
         "agent_id": AGENT_ID, "agent_name": "Sample disclosure explainer",
         "metadata": {"sample_only": True, "row_id": row["id"], "source_sha256": row["source_sha256"]},

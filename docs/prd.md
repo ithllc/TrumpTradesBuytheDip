@@ -28,9 +28,10 @@ A curious beginner sees headlines about public officials' investments but cannot
 | P3 | Time truth | Transaction, filing, public, observed, and price timestamps stay separate; unknown stays “unknown”; stale/late is explicit. |
 | P4 | Owner truth | Filer and disclosed owner are separate; spouse/dependent/unknown never become a claim that the filer personally traded. |
 | P5 | Deterministic watch event | Code computes the sample percentage using a declared reference window; a missing or zero reference prevents calculation. |
-| P6 | Bounded explanation | The model selects one of four beginner caveats; the app renders that approved sentence and a deterministic source-linked transaction summary. Any other model output is rejected. |
+| P6 | Bounded explanation | The model selects one of five beginner topics; the app renders an answer from validated sample fields and a deterministic source-linked transaction summary. Any other model output is rejected. |
 | P7 | Honest scope | Demo banner appears on all views; no real-person fabricated trades, broker integration, recommendation, or performance claim. |
 | P8 | Hackathon integration | At least one real Nicrron request and one PRISM KB-backed run are visible; Root Cause and v1/v2 Evaluator proofs are captured from the hosted PRISM project. |
+| P9 | Beginner voice path | A user can speak or type a question about the selected sample row; Nicrron chooses a topic, code answers from that row, and the browser reads it aloud. Unsupported speech browsers retain the text path. |
 
 ## Data rules
 
@@ -38,7 +39,11 @@ Canonical fields: `filer_id`, `filer_role`, `reported_for`, `asset_name`, `ticke
 
 ## Non-goals today
 
-Real data ingestion; automated scraping; full coverage of the President, all staff, or Congress; real prices; mobile app; notifications; a conviction score; personalized financial advice; trade execution; claims of market-beating performance.
+Real data ingestion; automated scraping; full coverage of the President, all staff, or Congress; real prices; mobile app; notifications; a conviction score; personalized financial advice; trade execution; claims of market-beating performance. The current sample price card is a watch event, not a trade-return tracker.
+
+## Post-event performance view
+
+For each source-linked, verified transaction, show hypothetical asset returns measured from the **reported transaction date** and separately from **first public availability**. Use time-stamped, split/dividend-adjusted price data where licensed; show the chosen benchmark and the calculation window. Label any unknown execution price, share count, owner, sale date, correction, or delisting. Do not turn the amount range into an exact position size or call an asset return the official's realized profit. Preserve source and price-provider provenance for each point. Real-data release also needs a rights and financial-language review.
 
 ## Success for the demo
 

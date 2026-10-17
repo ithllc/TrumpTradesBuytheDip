@@ -5,7 +5,7 @@ import pytest
 
 from app.core import SOURCE, dip_percent, load_rows, plain_summary, validate_row
 from app.main import app
-from app.providers import bounded_context, kb_result_context
+from app.providers import answer_for_topic, bounded_context, kb_result_context
 from scripts.replay_proofs import normalized_facts
 
 
@@ -45,6 +45,10 @@ def test_regression_replay_exposes_and_fixes_owner_date_bug():
 def test_model_cannot_add_unapproved_trade_claims():
     assert "historical information" in bounded_context("TIMING")
     assert bounded_context("Buy this stock now") is None
+    spouse = load_rows()[1]
+    assert "filer's spouse" in answer_for_topic(spouse, "OWNER")
+    assert spouse["transaction_date"] in answer_for_topic(spouse, "TIMING")
+    assert answer_for_topic(spouse, "Buy now") is None
 
 
 def test_empty_or_wrong_kb_results_do_not_count_as_retrieval():
@@ -70,4 +74,7 @@ async def test_local_api_is_sample_only(monkeypatch):
         assert answer["used_fallback"] is True
         assert "filer's spouse" in answer["summary"]
         assert "not configured" in answer["model_status"]
+        asked = (await client.post("/api/sample/explain/A2", json={"session_id": "demo-test", "question": "Who owns it?"})).json()
+        assert asked["used_fallback"] is True
+        assert "filer's spouse" in asked["summary"]
         assert (await client.get("/api/sample/transactions/nope")).status_code == 404
