@@ -1,0 +1,18 @@
+services:
+  - type: web
+    name: trumptradesbuythedip-demo
+    runtime: python
+    plan: free
+    buildCommand: pip install -r requirements.txt
+    startCommand: uvicorn app.main:app --host 0.0.0.0 --port $PORT
+    healthCheckPath: /healthz
+    autoDeployTrigger: off
+    envVars:
+      - key: NICRRON_API_KEY
+        sync: false
+      - key: PRISMTRACE_PROJECT_ID
+        sync: false
+      - key: PRISMTRACE_API_KEY
+        sync: false
+      - key: PRISMTRACE_HOST
+        value: https://prism.blockconvey.com
