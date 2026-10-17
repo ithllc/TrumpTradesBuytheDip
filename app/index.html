@@ -24,7 +24,7 @@
     <section class="grid" id="cards" aria-label="Sample filings"></section>
     <section class="detail" id="detail" aria-live="polite"></section>
   </main>
-  <footer><div class="wrap">Fictional sample data only. A price watch is an observation, not investment advice. No brokerage or trade execution. <a href="/sample-filing">Read the invented sample filing</a>.</div></footer>
+  <footer><div class="wrap">Fictional sample data only. A price watch is an observation, not investment advice. No brokerage or trade execution. <a href="/sample-filing">Read the invented sample filing</a> · <a href="https://github.com/ithllc/TrumpTradesBuytheDip" target="_blank" rel="noopener">Source code (AGPL-3.0)</a>.</div></footer>
   <script>
     let rows=[];let selected=null;const sessionId='demo-'+(sessionStorage.getItem('demo-id')||crypto.randomUUID());sessionStorage.setItem('demo-id',sessionId.slice(5));
     const safe=x=>String(x??'unknown').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));

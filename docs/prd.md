@@ -28,7 +28,7 @@ A curious beginner sees headlines about public officials' investments but cannot
 | P3 | Time truth | Transaction, filing, public, observed, and price timestamps stay separate; unknown stays “unknown”; stale/late is explicit. |
 | P4 | Owner truth | Filer and disclosed owner are separate; spouse/dependent/unknown never become a claim that the filer personally traded. |
 | P5 | Deterministic watch event | Code computes the sample percentage using a declared reference window; a missing or zero reference prevents calculation. |
-| P6 | Bounded explanation | Model output has citations to provided row IDs; unsupported material claims are rejected, with a plain fallback. |
+| P6 | Bounded explanation | The model selects one of four beginner caveats; the app renders that approved sentence and a deterministic source-linked transaction summary. Any other model output is rejected. |
 | P7 | Honest scope | Demo banner appears on all views; no real-person fabricated trades, broker integration, recommendation, or performance claim. |
 | P8 | Hackathon integration | At least one real Nicrron request and one PRISM KB-backed run are visible; Root Cause and v1/v2 Evaluator proofs are captured from the hosted PRISM project. |
 

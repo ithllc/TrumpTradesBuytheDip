@@ -26,6 +26,11 @@ def home() -> str:
     return INDEX.read_text(encoding="utf-8")
 
 
+@app.get("/healthz")
+def health() -> dict:
+    return {"ok": True, "sample_only": True}
+
+
 @app.get("/sample-filing", response_class=HTMLResponse)
 def sample_filing() -> str:
     from html import escape

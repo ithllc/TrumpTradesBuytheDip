@@ -5,6 +5,7 @@ import pytest
 
 from app.core import SOURCE, dip_percent, load_rows, plain_summary, validate_row
 from app.main import app
+from app.providers import bounded_context
 from scripts.replay_proofs import normalized_facts
 
 
@@ -39,6 +40,11 @@ def test_regression_replay_exposes_and_fixes_owner_date_bug():
     assert "personally purchased" in old and row["filed_date"] in old
     assert "filer's spouse" in fixed and row["transaction_date"] in fixed
     assert "personally purchased" not in fixed
+
+
+def test_model_cannot_add_unapproved_trade_claims():
+    assert "historical information" in bounded_context("TIMING")
+    assert bounded_context("Buy this stock now") is None
 
 
 @pytest.mark.asyncio

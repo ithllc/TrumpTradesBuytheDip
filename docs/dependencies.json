@@ -15,6 +15,7 @@
     {"name": "Nicrron", "required": true, "credentials": ["NICRRON_API_KEY"], "use": "all live model calls"},
     {"name": "PRISM by Block Convey", "required": true, "credentials": ["PRISMTRACE_PROJECT_ID", "PRISMTRACE_API_KEY"], "use": "KB, traces, root cause, evaluator"}
   ],
+  "demo_cost_controls": ["30 Nicrron explanation calls per web process", "12 explicit regression replay calls maximum when run once per version"],
   "future_optional": [
     {"name": "licensed market-data provider", "required": false, "credentials": ["MARKET_DATA_API_KEY"], "use": "real price watches after license review"}
   ],

@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import asyncio
 import os
 import time
 from datetime import datetime, timezone
@@ -11,6 +12,14 @@ import httpx
 
 AGENT_ID = "trumptrades-sample-explainer"
 MODEL = "nicrron/auto"
+_model_call_lock = asyncio.Lock()
+_model_calls = 0
+CONTEXT = {
+    "OWNER": "The filer and the person whose asset was reported may differ. Check the disclosed owner field.",
+    "TIMING": "A disclosure can appear weeks after a transaction, so it is historical information.",
+    "AMOUNT": "A disclosed amount is a range, not the exact amount spent or received.",
+    "PRICE": "A price dip is a change from a reference; it does not predict a rebound.",
+}
 
 
 def prism_configured() -> bool:
@@ -32,17 +41,20 @@ async def kb_search(query: str) -> tuple[str | None, str]:
 
 
 async def nicrron_explain(row: dict, retrieval: str | None) -> tuple[str | None, int, str]:
+    global _model_calls
     key = os.getenv("NICRRON_API_KEY")
     if not key:
         return None, 0, "Nicrron key not configured"
+    async with _model_call_lock:
+        if _model_calls >= 30:
+            return None, 0, "Demo model-call limit reached; using verified sample summary"
+        _model_calls += 1
     source = retrieval or row["raw_excerpt"]
     messages = [
-        {"role": "system", "content": ("Explain one FICTIONAL sample financial-disclosure row in plain English. "
-                                        "Use only the supplied row and retrieval. Say that a disclosure is delayed and does not predict returns. "
-                                        "Do not recommend buying or selling. Do not mention any person or asset beyond the supplied row. "
-                                        "Use one short sentence with no numbers, dates, amounts, or ticker symbols. "
-                                        "If evidence conflicts, answer exactly: Evidence needs review.")},
-        {"role": "user", "content": f"Sample row: {row['raw_excerpt']}\nRetrieved context: {source}\nExplain what this means for a beginner."},
+        {"role": "system", "content": ("This is fictional sample data. Choose the one most useful beginner caveat "
+                                        "from OWNER, TIMING, AMOUNT, or PRICE. Return exactly one of those words and nothing else. "
+                                        "Use the supplied sample row and retrieval only. No investment recommendation.")},
+        {"role": "user", "content": f"Sample row: {row['raw_excerpt']}\nRetrieved context: {source}\nWhich caveat matters most?"},
     ]
     started = time.monotonic()
     try:
@@ -58,12 +70,7 @@ async def nicrron_explain(row: dict, retrieval: str | None) -> tuple[str | None,
 
 
 def bounded_context(text: str | None) -> str | None:
-    if not text or len(text) > 420 or any(ch.isdigit() for ch in text):
-        return None
-    lower = text.lower()
-    if any(term in lower for term in ("buy now", "sell now", "guaranteed", "you should buy", "you should sell", "invest in")):
-        return None
-    return text
+    return CONTEXT.get(text.strip().upper()) if text else None
 
 
 async def record_prism(row: dict, output: str, retrieval: str | None, latency_ms: int, session_id: str, model_called: bool) -> str:
