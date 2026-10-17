@@ -1,0 +1,26 @@
+[
+  {
+    "id": "A1", "filer": "Demo Official A", "role": "fictional president", "reported_for": "official",
+    "asset": "Northstar Devices", "ticker": "NSTAR", "kind": "Purchase", "transaction_date": "2026-09-02",
+    "amount_min": 1001, "amount_max": 15000, "filed_date": "2026-10-10", "first_public_at": "2026-10-12", "observed_at": "2026-10-17",
+    "source_id": "SAMPLE-2026-01", "source_row": "A1",
+    "raw_excerpt": "Row A1 | Filer: Demo Official A (fictional president) | Owner: filer | Asset: Northstar Devices (NSTAR, fictional) | Type: Purchase | Transaction date: 2026-09-02 | Amount: $1,001–$15,000.",
+    "reference_price": "100.00", "observed_price": "91.50", "reference_window": "sample 30-day reference", "price_as_of": "2026-10-17", "threshold_pct": "8.00"
+  },
+  {
+    "id": "A2", "filer": "Demo Official B", "role": "fictional senator", "reported_for": "spouse",
+    "asset": "Cedar Labs", "ticker": "CDRL", "kind": "Sale", "transaction_date": "2026-09-08",
+    "amount_min": 15001, "amount_max": 50000, "filed_date": "2026-10-10", "first_public_at": "2026-10-12", "observed_at": "2026-10-17",
+    "source_id": "SAMPLE-2026-01", "source_row": "A2",
+    "raw_excerpt": "Row A2 | Filer: Demo Official B (fictional senator) | Owner: spouse | Asset: Cedar Labs (CDRL, fictional) | Type: Sale | Transaction date: 2026-09-08 | Amount: $15,001–$50,000.",
+    "reference_price": "50.00", "observed_price": "48.00", "reference_window": "sample 30-day reference", "price_as_of": "2026-10-17", "threshold_pct": "8.00"
+  },
+  {
+    "id": "A3", "filer": "Demo Official C", "role": "fictional House member", "reported_for": "unknown",
+    "asset": "Harbor Works", "ticker": "HBRW", "kind": "Purchase", "transaction_date": "2026-09-14",
+    "amount_min": 1001, "amount_max": 15000, "filed_date": "2026-10-10", "first_public_at": "2026-10-12", "observed_at": "2026-10-17",
+    "source_id": "SAMPLE-2026-01", "source_row": "A3",
+    "raw_excerpt": "Row A3 | Filer: Demo Official C (fictional House member) | Owner: not specified in this sample row | Asset: Harbor Works (HBRW, fictional) | Type: Purchase | Transaction date: 2026-09-14 | Amount: $1,001–$15,000.",
+    "reference_price": "25.00", "observed_price": "21.75", "reference_window": "sample 30-day reference", "price_as_of": "2026-10-17", "threshold_pct": "8.00"
+  }
+]

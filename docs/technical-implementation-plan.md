@@ -38,6 +38,8 @@ If Builder access is unavailable, request the event entitlement immediately. A l
 5. Implement PRISM KB search and trace submission per [official docs](https://blockconvey.com/docs). Include `project_id`, `model`, `input_messages`, `output_message`, `latency_ms`, `session_id`, and `agent_id`; attach retrieval/tool context via the supported SDK or span path so `{context}` is populated for the evaluator. Verify the run appears in the PRISM dashboard.
 6. Capture repeatable v1/v2 fixture questions and their expected answers. Use the same dataset for both; preserve trace/run IDs and screenshots. Do not claim a root-cause cluster if PRISM has not produced one.
 
+The repository includes `scripts/replay_proofs.py` for six explicitly synthetic failure/fix cases. It calls Nicrron for each case, queries PRISM KB, and sends traces plus retrieval and normalization spans. Run `python -m scripts.replay_proofs --version v1` before Root Cause, then `python -m scripts.replay_proofs --version v2` after inspecting the failing examples. The v1 bug is deliberately reproduced and disclosed in source and trace metadata. Check the actual PRISM evaluator scores; do not state a score improvement until the dashboard confirms it.
+
 ## Checks before demo
 
 - Fixture labels survive every route and screenshot; no fabricated real-person trades.

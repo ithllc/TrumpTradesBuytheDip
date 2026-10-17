@@ -1,5 +1,5 @@
 {
-  "status": "planned_for_hackathon",
+  "status": "prototype_implemented; hosted_services_pending_credentials",
   "runtime": [
     {"name": "python", "version": ">=3.11", "purpose": "server, schema checks, Decimal math"},
     {"name": "fastapi", "purpose": "web and JSON routes"},
@@ -8,7 +8,8 @@
     {"name": "jinja2", "purpose": "server-rendered accessible page"}
   ],
   "dev_test": [
-    {"name": "pytest", "purpose": "source, owner, date, and dip edge cases"}
+    {"name": "pytest", "purpose": "source, owner, date, and dip edge cases"},
+    {"name": "pytest-asyncio", "purpose": "async API checks"}
   ],
   "external_services": [
     {"name": "Nicrron", "required": true, "credentials": ["NICRRON_API_KEY"], "use": "all live model calls"},
